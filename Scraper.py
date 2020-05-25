@@ -4,6 +4,7 @@ import string
 import os
 initial_site = "http://www.ufcstats.com/statistics/events/completed?page=all"
 
+#Grabs info from the initial webpage and passes it onto ScrapeFights
 def ScrapeFightCards():
     response = requests.get(initial_site)
     content = BeautifulSoup(response.content, 'html.parser')
@@ -29,6 +30,7 @@ def ScrapeFightCards():
             fight_card_info = [fight_card_url['href'], fight_card, date, location]
             ScrapeFights(fight_card_info, fight_doc)
 
+# Scrapes info from the total fightcard page and passes info onto ScrapeStats
 def ScrapeFights(fight_card_info, fight_doc):
     response = requests.get(fight_card_info[0])
     content = BeautifulSoup(response.content, 'html.parser')
@@ -58,6 +60,7 @@ def ScrapeFights(fight_card_info, fight_doc):
         print(this_fight)
         ScrapeStats(table_row.get('data-link'), this_fight, fight_doc)
 
+# Scrapes the stats for the each fight and sends them to order_fight_stats before writing it to a csv.
 def ScrapeStats(url, fight_card_info, fight_doc):
     response = requests.get(url)
     content = BeautifulSoup(response.content, 'html.parser')
@@ -101,6 +104,7 @@ def ScrapeStats(url, fight_card_info, fight_doc):
     fight_stats_output += order_corner_stats(blue_corner)
     fight_doc.write(fight_stats_output + "\n")
 
+# orders the fight stats given to it and adds in any filler for if the fight didn't go 5 rounds
 def order_corner_stats(corner_stats):
     output_string = f"{corner_stats[0][0]},"
     filler_string = ",,,,,,,,,,,,,,,,,,,,,,"

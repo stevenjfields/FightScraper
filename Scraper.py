@@ -28,7 +28,6 @@ def ScrapeFightCards():
                 ).text.lstrip().rstrip().replace(',', '')
             fight_card_info = [fight_card_url['href'], fight_card, date, location]
             ScrapeFights(fight_card_info, fight_doc)
-            break
 
 def ScrapeFights(fight_card_info, fight_doc):
     response = requests.get(fight_card_info[0])
@@ -43,12 +42,21 @@ def ScrapeFights(fight_card_info, fight_doc):
             'class':'b-fight-details__table-col l-page_align_left'
         })
         weightclass = weightclass[1].find('p').text.lstrip().rstrip()
+        for_belt = False
+        check_belt = table_row.find_all('td', attrs={'class':'b-fight-details__table-col l-page_align_left'})
+        check_belt = check_belt[1].find('p').find_all('img')
+        if len(check_belt) > 0:
+            if check_belt[0]['src'] == "http://1e49bc5171d173577ecd-1323f4090557a33db01577564f60846c.r80.cf1.rackcdn.com/belt.png":
+                for_belt = True
+        decision = table_row.find_all('td', attrs={'class':'b-fight-details__table-col l-page_align_left'})
+        decision = decision[2].find('p').text.lstrip().rstrip()
         this_fight = list.copy(fight_card_info)
         this_fight.append(winner)
         this_fight.append(weightclass)
+        this_fight.append(for_belt)
+        this_fight.append(decision)
         print(this_fight)
         ScrapeStats(table_row.get('data-link'), this_fight, fight_doc)
-        break
 
 def ScrapeStats(url, fight_card_info, fight_doc):
     response = requests.get(url)
@@ -86,13 +94,47 @@ def ScrapeStats(url, fight_card_info, fight_doc):
                 red_corner.append(list1)
                 blue_corner.append(list2)
 
-    fight_stats_output = f"{fight_card_info[1]},{fight_card_info[2]},{fight_card_info[3]},,{referee},,,{fight_card_info[4]},{fight_card_info[5]},"
-    for i in range(0, len(red_corner)/2):
-        pass
-    fight_doc.write(fight_stats_output)
+    fight_stats_output = None
+    fight_stats_output = f"{fight_card_info[1]},{fight_card_info[2]},{fight_card_info[3]},{fight_card_info[6]},{referee},{fight_card_info[7]},{fight_card_info[4]},{fight_card_info[5]},"
+    
+    fight_stats_output += order_corner_stats(red_corner)
+    fight_stats_output += order_corner_stats(blue_corner)
+    fight_doc.write(fight_stats_output + "\n")
 
-def order_corner_stats(stat_totals, sig_strikes):
-    pass
+def order_corner_stats(corner_stats):
+    output_string = f"{corner_stats[0][0]},"
+    filler_string = ",,,,,,,,,,,,,,,,,,,,,,"
+    num_of_rounds = int(len(corner_stats)/2)
+
+    for i in range(0, num_of_rounds):
+        output_string += f"{corner_stats[i][1]},"
+        output_string += f"{corner_stats[i][2][0]},"
+        output_string += f"{corner_stats[i][2][1]},"
+        output_string += f"{corner_stats[i][4][0]},"
+        output_string += f"{corner_stats[i][4][1]},"
+        output_string += f"{corner_stats[i][5][0]},"
+        output_string += f"{corner_stats[i][5][1]},"
+        output_string += f"{corner_stats[i][7]},"
+        output_string += f"{corner_stats[i][8]},"
+        output_string += f"{corner_stats[i][9]},"
+        output_string += f"{corner_stats[i+num_of_rounds][3][0]},"
+        output_string += f"{corner_stats[i+num_of_rounds][3][1]},"
+        output_string += f"{corner_stats[i+num_of_rounds][4][0]},"
+        output_string += f"{corner_stats[i+num_of_rounds][4][1]},"
+        output_string += f"{corner_stats[i+num_of_rounds][5][0]},"
+        output_string += f"{corner_stats[i+num_of_rounds][5][1]},"
+        output_string += f"{corner_stats[i+num_of_rounds][6][0]},"
+        output_string += f"{corner_stats[i+num_of_rounds][6][1]},"
+        output_string += f"{corner_stats[i+num_of_rounds][7][0]},"
+        output_string += f"{corner_stats[i+num_of_rounds][7][1]},"
+        output_string += f"{corner_stats[i+num_of_rounds][8][0]},"
+        output_string += f"{corner_stats[i+num_of_rounds][8][1]},"
+
+    while(num_of_rounds <= 5):
+        output_string += filler_string
+        num_of_rounds += 1
+
+    return output_string
 
 fight_stats_names = [
     'Fight_Card',
@@ -100,7 +142,6 @@ fight_stats_names = [
     'Location',
     'Title_Fight',
     'Referee',
-    'Bonus',
     'Decision',
     'Winner',
     'Weightclass',

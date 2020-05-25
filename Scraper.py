@@ -45,7 +45,7 @@ def ScrapeFights(fight_card_info, fight_doc):
         for_belt = False
         check_belt = table_row.find_all('td', attrs={'class':'b-fight-details__table-col l-page_align_left'})
         check_belt = check_belt[1].find('p').find_all('img')
-        if len(check_belt) > 0:
+        if len(check_belt) > 0 and not ('ultimate fighter' in fight_card_info[1]):
             if check_belt[0]['src'] == "http://1e49bc5171d173577ecd-1323f4090557a33db01577564f60846c.r80.cf1.rackcdn.com/belt.png":
                 for_belt = True
         decision = table_row.find_all('td', attrs={'class':'b-fight-details__table-col l-page_align_left'})

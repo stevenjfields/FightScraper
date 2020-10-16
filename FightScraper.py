@@ -2,7 +2,10 @@ from bs4 import BeautifulSoup
 import requests
 import string
 import os
+import codecs
 initial_site = "http://www.ufcstats.com/statistics/events/completed?page=all"
+
+rowno = 1
 
 #Grabs info from the initial webpage and passes it onto ScrapeFights
 def ScrapeFightCards():
@@ -69,6 +72,7 @@ def ScrapeStats(url, fight_card_info, fight_doc):
     names = content.find_all('h3', attrs={'class':'b-fight-details__person-name'})
     for i in range(0, len(names)):
         names[i] = names[i].text.lstrip().rstrip()
+        names[i] = names[i].replace(',', '')
     
     referee = content.find('div', attrs={'class':'b-fight-details__content'})
     referee = referee.find_all('span')
@@ -98,11 +102,12 @@ def ScrapeStats(url, fight_card_info, fight_doc):
                 blue_corner.append(list2)
 
     fight_stats_output = None
-    fight_stats_output = f"{fight_card_info[1]},{fight_card_info[2]},{fight_card_info[3]},{fight_card_info[6]},{referee},{fight_card_info[7]},{fight_card_info[4]},{fight_card_info[5]},"
+    fight_stats_output = f"{fight_card_info[1]},{fight_card_info[2]},{fight_card_info[3]},{fight_card_info[6]},{referee.replace(',', '')},{fight_card_info[7]},{fight_card_info[4]},{fight_card_info[5]},"
     
     fight_stats_output += order_corner_stats(red_corner)
     fight_stats_output += order_corner_stats(blue_corner)
-    fight_doc.write(fight_stats_output + "\n")
+    # [:-1] to remove the extra comma at the end that interferes with pandas dataframes.
+    fight_doc.write(unicode(fight_stats_output[:-1] + "\n", 'utf-8'))
 
 # orders the fight stats given to it and adds in any filler for if the fight didn't go 5 rounds
 def order_corner_stats(corner_stats):
